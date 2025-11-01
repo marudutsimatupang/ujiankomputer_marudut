@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ujian Tengah Semester - Ilmu Komputer</title>
+    <!-- 1. Memuat Tailwind CSS untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 2. Memuat library jsPDF untuk membuat PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        /* Style tambahan */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Menyembunyikan elemen dengan kelas .hidden */
+        .hidden {
+            display: none;
+        }
+        /* Styling untuk radio button */
+        .question-option {
+            display: block;
+            padding: 12px 16px;
+            background-color: #f0f4f8;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .question-option input {
+            display: none;
+        }
+        /* Styling saat radio button dipilih */
+        .question-option input:checked + label {
+            border-color: #3b82f6; /* biru */
+            background-color: #dbeafe; /* biru muda */
+            color: #1e40af; /* biru tua */
+            font-weight: 600;
+        }
+        .question-option label {
+            display: block;
+            width: 100%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-700 to-blue-900 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Kontainer Utama Aplikasi -->
+    <div id="app-container" class="w-full max-w-2xl mx-auto">
+
+        <!-- Logo Pendidikan -->
+        <div class="flex justify-center mb-4">
+            <svg class="w-16 h-16 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.0006 21.5C12.0006 21.5 8.435 18.7112 3.73809 17.2407C3.33722 17.1262 3.00061 16.7821 3.00061 16.3601V10.1503C3.00061 9.68297 3.2842 9.25596 3.73861 9.07185L11.2386 5.32185C11.6999 5.13524 12.2152 5.13322 12.6784 5.3168L20.2619 9.0668C20.7157 9.25091 21.0006 9.67843 21.0006 10.1463V16.3601C21.0006 16.7821 20.664 17.1262 20.2631 17.2407C15.5662 18.7112 12.0006 21.5 12.0006 21.5ZM12.0006 19.4107C13.6823 18.4905 16.142 17.3397 19.0006 16.6025V11.233L12.0006 8.08188L5.00061 11.233V16.6025C7.85925 17.3397 10.3183 18.4905 12.0006 19.4107ZM19.0006 3.5C19.0006 4.32843 15.8666 5 12.0006 5C8.13461 5 5.00061 4.32843 5.00061 3.5C5.00061 2.67157 8.13461 2 12.0006 2C15.8666 2 19.0006 2.67157 19.0006 3.5Z" />
+            </svg>
+        </div>
+        
+        <h1 class="text-3xl font-bold text-center text-white mb-6">Ujian Tengah Semester</h1>
+
+        <!-- 1. Halaman Login -->
+        <div id="login-page" class="bg-white p-8 rounded-lg shadow-xl">
+            <h2 class="text-2xl font-semibold text-gray-800 text-center mb-6">Login Siswa</h2>
+            <div id="login-error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 hidden">
+                Password salah atau nama belum diisi.
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label for="student-name" class="block text-sm font-medium text-gray-700 mb-1">Nama Siswa</label>
+                    <input type="text" id="student-name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Masukkan nama lengkap Anda">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password Ujian</label>
+                    <input type="password" id="password" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Masukkan password">
+                </div>
+                <button id="start-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition duration-200">
+                    Mulai Ujian
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. Halaman Ujian -->
+        <div id="exam-page" class="bg-white p-8 rounded-lg shadow-xl hidden">
+            <!-- Header Ujian: Nama dan Timer -->
+            <div class="flex justify-between items-center border-b pb-4 mb-6">
+                <div>
+                    <span class="text-sm text-gray-600">Nama Siswa:</span>
+                    <h3 id="exam-student-name" class="text-lg font-semibold text-gray-900"></h3>
+                </div>
+                <div class="text-right">
+                    <span class="text-sm text-gray-600">Sisa Waktu:</span>
+                    <div id="timer" class="text-2xl font-bold text-red-600">25:00</div>
+                </div>
+            </div>
+
+            <!-- Kontainer Soal -->
+            <div id="questions-container" class="space-y-8">
+                <!-- Soal akan dimuat di sini oleh JavaScript -->
+            </div>
+
+            <!-- Tombol Selesai -->
+            <button id="submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition duration-200 mt-8">
+                Selesai & Kumpulkan
+            </button>
+        </div>
+
+        <!-- 3. Halaman Hasil -->
+        <div id="result-page" class="bg-white p-8 rounded-lg shadow-xl text-center hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Ujian Selesai!</h2>
+            <p class="text-lg text-gray-600 mb-2">Terima kasih, <span id="result-student-name" class="font-semibold"></span>!</p>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 my-6">
+                <p class="text-xl text-gray-700 mb-2">Jawaban Benar:</p>
+                <p id="correct-answers" class="text-4xl font-bold text-blue-600">0 / 20</p>
+                <hr class="my-4">
+                <p class="text-xl text-gray-700 mb-2">Nilai Akhir Anda:</p>
+                <p id="score" class="text-6xl font-extrabold text-blue-800">0</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button id="download-pdf-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-200">
+                    Unduh Hasil (PDF)
+                </button>
+                <button id="retry-btn" class="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-200">
+                    Kembali ke Login
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- KONFIGURASI APLIKASI ---
+        const EXAM_PASSWORD = "12345";
+        const EXAM_DURATION_MINUTES = 25;
+        
+        // --- BANK SOAL ---
+        // Anda bisa mengganti soal-soal di bawah ini
+        const questions = [
+            {
+                question: "Singkatan dari CPU adalah...",
+                options: ["Central Processing Unit", "Central Process Unit", "Computer Personal Unit", "Center Power Unit"],
+                answer: "Central Processing Unit"
+            },
+            {
+                question: "Perangkat keras yang berfungsi sebagai 'otak' komputer adalah...",
+                options: ["RAM", "Hard Disk", "Monitor", "CPU"],
+                answer: "CPU"
+            },
+            {
+                question: "Singkatan dari RAM adalah...",
+                options: ["Read Access Memory", "Random Access Memory", "Read Only Memory", "Random Only Memory"],
+                answer: "Random Access Memory"
+            },
+            {
+                question: "Berikut ini yang termasuk perangkat masukan (input device) adalah...",
+                options: ["Monitor", "Printer", "Speaker", "Mouse"],
+                answer: "Mouse"
+            },
+            {
+                question: "Berikut ini yang termasuk perangkat keluaran (output device) adalah...",
+                options: ["Keyboard", "Scanner", "Monitor", "Microphone"],
+                answer: "Monitor"
+            },
+            {
+                question: "Perangkat lunak yang digunakan untuk menjelajahi internet disebut...",
+                options: ["Browser", "Spreadsheet", "Word Processor", "Operating System"],
+                answer: "Browser"
+            },
+            {
+                question: "Apa kepanjangan dari 'www' dalam alamat web?",
+                options: ["World Web Wide", "Wide World Web", "World Wide Web", "Web World Wide"],
+                answer: "World Wide Web"
+            },
+            {
+                question: "Microsoft Word adalah contoh dari perangkat lunak...",
+                options: ["Pengolah Angka", "Pengolah Kata", "Presentasi", "Sistem Operasi"],
+                answer: "Pengolah Kata"
+            },
+            {
+                question: "Microsoft Excel adalah contoh dari perangkat lunak...",
+                options: ["Pengolah Angka", "Pengolah Kata", "Presentasi", "Browser"],
+                answer: "Pengolah Angka"
+            },
+            {
+                question: "Tombol keyboard yang digunakan untuk menghapus teks di sebelah kiri kursor adalah...",
+                options: ["Delete", "Enter", "Backspace", "Tab"],
+                answer: "Backspace"
+            },
+            {
+                question: "1 Gigabyte (GB) setara dengan...",
+                options: ["1024 Kilobyte (KB)", "1000 Megabyte (MB)", "1024 Megabyte (MB)", "1000 Byte"],
+                answer: "1024 Megabyte (MB)"
+            },
+            {
+                question: "Apa kepanjangan dari 'OS'?",
+                options: ["Open Software", "Operating System", "Open Source", "Office Suite"],
+                answer: "Operating System"
+            },
+            {
+                question: "Berikut ini yang merupakan contoh Sistem Operasi adalah...",
+                options: ["Microsoft Office", "Google Chrome", "Adobe Photoshop", "Windows 10"],
+                answer: "Windows 10"
+            },
+            {
+                question: "Perangkat yang digunakan untuk menyimpan data secara permanen di komputer adalah...",
+                options: ["RAM", "CPU", "Hard Disk Drive (HDD)", "Cache"],
+                answer: "Hard Disk Drive (HDD)"
+            },
+            {
+                question: "Jaringan komputer yang mencakup area geografis yang luas, seperti antar kota atau negara, disebut...",
+                options: ["LAN", "MAN", "WAN", "PAN"],
+                answer: "WAN"
+            },
+            {
+                question: "Apa kepanjangan dari 'LAN'?",
+                options: ["Large Area Network", "Local Area Network", "Long Area Network", "Local Access Network"],
+                answer: "Local Area Network"
+            },
+            {
+                question: "Ikon 'keranjang sampah' di desktop Windows disebut...",
+                options: ["My Computer", "Control Panel", "Recycle Bin", "Taskbar"],
+                answer: "Recycle Bin"
+            },
+            {
+                question: "Istilah untuk 'kesalahan' dalam program komputer adalah...",
+                options: ["Virus", "Bug", "Spam", "Glitch"],
+                answer: "Bug"
+            },
+            {
+                question: "Apa kepanjangan dari HTML?",
+                options: ["HyperText Markup Language", "HyperTool Markup Language", "HomeText Markup Language", "Hyperlink Text Language"],
+                answer: "HyperText Markup Language"
+            },
+            {
+                question: "Tindakan penipuan di internet untuk mencuri data pribadi disebut...",
+                options: ["Downloading", "Browsing", "Phishing", "Streaming"],
+                answer: "Phishing"
+            }
+        ];
+
+        // --- VARIABEL GLOBAL ---
+        let studentName = "";
+        let timerInterval;
+        let totalSeconds = EXAM_DURATION_MINUTES * 60;
+        let finalScore = 0;
+        let finalCorrectAnswers = 0;
+        let finalTotalQuestions = questions.length;
+
+        // --- REFERENSI ELEMEN DOM ---
+        const loginPage = document.getElementById('login-page');
+        const examPage = document.getElementById('exam-page');
+        const resultPage = document.getElementById('result-page');
+        
+        const studentNameInput = document.getElementById('student-name');
+        const passwordInput = document.getElementById('password');
+        const startBtn = document.getElementById('start-btn');
+        const loginError = document.getElementById('login-error');
+
+        const examStudentName = document.getElementById('exam-student-name');
+        const timerEl = document.getElementById('timer');
+        const questionsContainer = document.getElementById('questions-container');
+        const submitBtn = document.getElementById('submit-btn');
+
+        const resultStudentName = document.getElementById('result-student-name');
+        const correctAnswersEl = document.getElementById('correct-answers');
+        const scoreEl = document.getElementById('score');
+        const downloadPdfBtn = document.getElementById('download-pdf-btn');
+        const retryBtn = document.getElementById('retry-btn');
+        
+        // --- FUNGSI-FUNGSI ---
+
+        /**
+         * Memulai Ujian
+         */
+        function startExam() {
+            studentName = studentNameInput.value.trim();
+            
+            // Validasi Login
+            if (studentName === "" || passwordInput.value !== EXAM_PASSWORD) {
+                loginError.classList.remove('hidden');
+                if(studentName === "") {
+                    loginError.textContent = "Nama siswa tidak boleh kosong.";
+                } else {
+                    loginError.textContent = "Password yang Anda masukkan salah.";
+                }
+                return;
+            }
+
+            // Sembunyikan login, tampilkan ujian
+            loginPage.classList.add('hidden');
+            examPage.classList.remove('hidden');
+            resultPage.classList.add('hidden');
+
+            // Set nama siswa di halaman ujian
+            examStudentName.textContent = studentName;
+
+            // Muat soal
+            loadQuestions();
+
+            // Mulai timer
+            startTimer();
+        }
+
+        /**
+         * Memuat Soal-soal ke Halaman
+         */
+        function loadQuestions() {
+            questionsContainer.innerHTML = ''; // Kosongkan kontainer
+            questions.forEach((q, index) => {
+                const questionElement = document.createElement('div');
+                questionElement.className = 'question';
+                
+                // Teks Pertanyaan
+                const questionText = document.createElement('p');
+                questionText.className = 'text-lg font-semibold text-gray-800 mb-4';
+                questionText.textContent = `${index + 1}. ${q.question}`;
+                
+                questionElement.appendChild(questionText);
+
+                // Pilihan Jawaban
+                const optionsWrapper = document.createElement('div');
+                optionsWrapper.className = 'options-wrapper space-y-2';
+
+                // Acak pilihan jawaban (opsional, tapi bagus)
+                const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+
+                shuffledOptions.forEach(option => {
+                    const optionId = `q${index}_${option.replace(/\s+/g, '_')}`; // Buat ID unik
+                    
+                    const optionLabel = document.createElement('div');
+                    optionLabel.className = 'question-option';
+
+                    const radioInput = document.createElement('input');
+                    radioInput.type = 'radio';
+                    radioInput.id = optionId;
+                    radioInput.name = `q${index}`; // Group by question
+                    radioInput.value = option;
+                    
+                    const labelText = document.createElement('label');
+                    labelText.htmlFor = optionId;
+                    labelText.textContent = option;
+
+                    optionLabel.appendChild(radioInput);
+                    optionLabel.appendChild(labelText);
+                    optionsWrapper.appendChild(optionLabel);
+                });
+
+                questionElement.appendChild(optionsWrapper);
+                questionsContainer.appendChild(questionElement);
+            });
+        }
+
+        /**
+         * Memulai Timer
+         */
+        function startTimer() {
+            totalSeconds = EXAM_DURATION_MINUTES * 60;
+            updateTimerDisplay(); // Tampilkan timer awal
+
+            timerInterval = setInterval(() => {
+                totalSeconds--;
+                updateTimerDisplay();
+
+                if (totalSeconds <= 0) {
+                    // Waktu habis!
+                    finishExam(true); // 'true' berarti auto-submit
+                }
+            }, 1000);
+        }
+
+        /**
+         * Update Tampilan Timer (MM:SS)
+         */
+        function updateTimerDisplay() {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            // Beri peringatan jika waktu hampir habis
+            if(totalSeconds <= 60) {
+                timerEl.classList.add('animate-pulse'); // Efek berkedip
+            }
+        }
+
+        /**
+         * Mengakhiri Ujian (Submit)
+         */
+        function finishExam(isAutoSubmit = false) {
+            clearInterval(timerInterval); // Hentikan timer
+
+            if(isAutoSubmit) {
+                // Beri notifikasi jika auto-submit
+                // Di aplikasi nyata, Anda bisa pakai modal. Di sini kita skip.
+                console.log("Waktu habis, ujian dikumpulkan otomatis.");
+            }
+
+            // Hitung skor
+            calculateScore();
+
+            // Tampilkan halaman hasil
+            examPage.classList.add('hidden');
+            resultPage.classList.remove('hidden');
+
+            // Tampilkan data di halaman hasil
+            resultStudentName.textContent = studentName;
+            correctAnswersEl.textContent = `${finalCorrectAnswers} / ${finalTotalQuestions}`;
+            scoreEl.textContent = finalScore;
+        }
+
+        /**
+         * Menghitung Skor
+         */
+        function calculateScore() {
+            let correct = 0;
+            questions.forEach((q, index) => {
+                const selectedOption = document.querySelector(`input[name="q${index}"]:checked`);
+                
+                if (selectedOption && selectedOption.value === q.answer) {
+                    correct++;
+                }
+            });
+            
+            finalCorrectAnswers = correct;
+            finalTotalQuestions = questions.length;
+            finalScore = Math.round((correct / finalTotalQuestions) * 100);
+        }
+
+        /**
+         * Membuat dan Mengunduh PDF
+         */
+        function downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Header
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Hasil Ujian Tengah Semester', 105, 20, { align: 'center' });
+
+            // Garis
+            doc.setLineWidth(0.5);
+            doc.line(20, 25, 190, 25);
+
+            // Data Siswa
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Nama Siswa:', 20, 40);
+            doc.setFont('helvetica', 'bold');
+            doc.text(studentName, 50, 40);
+
+            doc.setFont('helvetica', 'normal');
+            doc.text('Mata Pelajaran:', 20, 50);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Ilmu Komputer', 50, 50);
+            
+            // Hasil
+            doc.setFont('helvetica', 'normal');
+            doc.text('Jawaban Benar:', 20, 70);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${finalCorrectAnswers} / ${finalTotalQuestions}`, 60, 70);
+
+            doc.setFont('helvetica', 'normal');
+            doc.text('NILAI AKHIR:', 20, 80);
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.text(String(finalScore), 60, 80);
+
+            // Simpan file
+            doc.save(`Hasil_Ujian_${studentName.replace(' ', '_')}.pdf`);
+        }
+
+        /**
+         * Reset Aplikasi ke Halaman Login
+         */
+        function resetApp() {
+            // Reset variabel
+            studentName = "";
+            totalSeconds = EXAM_DURATION_MINUTES * 60;
+            if(timerInterval) clearInterval(timerInterval);
+
+            // Reset tampilan
+            resultPage.classList.add('hidden');
+            examPage.classList.add('hidden');
+            loginPage.classList.remove('hidden');
+
+            // Reset input
+            studentNameInput.value = '';
+            passwordInput.value = '';
+            loginError.classList.add('hidden');
+            timerEl.classList.remove('animate-pulse');
+        }
+
+        // --- EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', () => {
+            startBtn.addEventListener('click', startExam);
+            submitBtn.addEventListener('click', () => finishExam(false)); // Manual submit
+            downloadPdfBtn.addEventListener('click', downloadPDF);
+            retryBtn.addEventListener('click', resetApp);
+        });
+
+    </script>
+</body>
+</html>
